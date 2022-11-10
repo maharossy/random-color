@@ -20,15 +20,15 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function createRandomColors() {
-  const colorCode = '0123456789ABCDEF';
+// function createRandomColors() {
+//   const colorCode = '0123456789ABCDEF';
 
-  color = '';
-  for (let i = 0; i < 6; i++) {
-    color += colorCode[Math.floor(Math.random() * colorCode.length)];
-  }
-  return '#' + color;
-}
+//   color = '';
+//   for (let i = 0; i < 6; i++) {
+//     color += colorCode[Math.floor(Math.random() * colorCode.length)];
+//   }
+//   return '#' + color;
+// }
 
 function copyText(text) {
   return navigator.clipboard.writeText(text);
@@ -46,15 +46,26 @@ function copyText(text) {
 //   );
 // }
 
-function getRandomColor() {
-  colons.forEach((col) => {
+function getRandomColor(isInitial) {
+  const colors = isInitial ? getColorsFromHash() : [];
+  colons.forEach((col, index) => {
     const isLocked = col.querySelector('i').classList.contains('fa-lock');
     const text = col.querySelector('h2');
     const button = col.querySelector('button');
-    const color = chroma.random();
 
     if (isLocked) {
+      colors.push(text.textContent);
       return;
+    }
+
+    const color = isInitial
+      ? colors[index]
+        ? colors[index]
+        : chroma.random()
+      : chroma.random();
+
+    if (!isInitial) {
+      colors.push(color);
     }
 
     text.textContent = color;
@@ -63,6 +74,8 @@ function getRandomColor() {
     setTextColor(text, color);
     setTextColor(button, color);
   });
+
+  updateColorsHash(colors);
 }
 
 function setTextColor(text, color) {
@@ -70,4 +83,22 @@ function setTextColor(text, color) {
   text.style.color = luminance > 0.5 ? 'black' : 'white';
 }
 
-getRandomColor();
+function updateColorsHash(colors = []) {
+  document.location.hash = colors
+    .map((col) => {
+      return col.toString().substring(1);
+    })
+    .join('-');
+}
+
+function getColorsFromHash() {
+  if (document.location.hash.length > 1) {
+    return document.location.hash
+      .substring(1)
+      .split('-')
+      .map((color) => '#' + color);
+  }
+  return [];
+}
+
+getRandomColor(true);
